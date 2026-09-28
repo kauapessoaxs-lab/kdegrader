@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>kdegrader — gerador de degradê</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef0f6;--panel:#fff;--ink:#1b1f3b;--mute:#5d6385;--line:#d5d9e8;--focus:#3a3fd8;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161830;--panel:#20234a;--ink:#eceefc;--mute:#9da3cf;--line:#343867;--focus:#8f94ff}}
+:root[data-theme="dark"]{--bg:#161830;--panel:#20234a;--ink:#eceefc;--mute:#9da3cf;--line:#343867;--focus:#8f94ff}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 "Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:20px clamp(16px,4vw,40px) 0}
+.logo{font-weight:800;font-size:1.6rem;letter-spacing:-.04em}
+.logo i{font-style:normal;background:var(--g);-webkit-background-clip:text;background-clip:text;color:transparent}
+header p{margin:0;color:var(--mute);font-size:.95rem}
+main{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(300px,1fr);gap:20px;padding:20px clamp(16px,4vw,40px) 40px;max-width:1280px;margin:0 auto}
+@media (max-width:820px){main{grid-template-columns:1fr}}
+.stage{position:relative;border-radius:28px;min-height:min(72vh,640px);background:var(--g);display:flex;align-items:flex-end;padding:20px;box-shadow:0 30px 60px -30px rgba(27,31,59,.5)}
+.stage h1{margin:0;font-weight:800;font-size:clamp(2rem,6vw,4.4rem);line-height:.95;letter-spacing:-.05em;color:#fff;mix-blend-mode:difference;max-width:11ch}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:18px}
+h2{margin:0 0 8px;font-size:1rem;font-weight:600}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.seg button,.btn{border:1px solid var(--line);background:transparent;border-radius:10px;padding:9px 10px;cursor:pointer;font-weight:600}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn:hover,.seg button:hover{border-color:var(--ink)}
+.row{display:flex;align-items:center;gap:10px}
+input[type=range]{flex:1;accent-color:var(--focus);min-width:0}
+output{min-width:3.6em;text-align:right;color:var(--mute);font-variant-numeric:tabular-nums}
+.bar{height:16px;border-radius:8px;border:1px solid var(--line)}
+.stop{display:grid;grid-template-columns:44px 1fr 3.4em 32px;gap:10px;align-items:center;margin-top:8px}
+.stop input[type=color]{width:44px;height:36px;padding:0;border:1px solid var(--line);border-radius:8px;background:none;cursor:pointer}
+.stop .x{border:0;background:none;cursor:pointer;font-size:1.3rem;color:var(--mute);border-radius:8px}
+.stop .x:disabled{opacity:.3;cursor:not-allowed}
+.presets{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.presets button{aspect-ratio:1;border:2px solid var(--panel);outline:1px solid var(--line);border-radius:50%;cursor:pointer;padding:0}
+pre{margin:0;padding:12px;border-radius:12px;background:var(--bg);border:1px solid var(--line);white-space:pre-wrap;word-break:break-all;font:.85rem/1.5 ui-monospace,Menlo,Consolas,monospace}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.acts .btn{flex:1}
+.toast{min-height:1.4em;color:var(--mute);font-size:.9rem}
+header nav a{color:var(--ink);font-weight:600;text-decoration:none;border-bottom:2px solid var(--line)}
+header nav a:hover{border-color:var(--ink)}
+.course{max-width:1280px;margin:0 auto;padding:20px clamp(16px,4vw,40px) 60px}
+.course h2.big{font-size:clamp(1.6rem,4vw,2.6rem);letter-spacing:-.04em;font-weight:800;margin:0 0 6px}
+.course>p{color:var(--mute);margin:0 0 24px;max-width:60ch}
+.lessons{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.lesson{background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden;display:flex;flex-direction:column}
+.lesson .pv{height:120px}
+.lesson .body{padding:16px;display:flex;flex-direction:column;gap:10px;flex:1}
+.lesson h3{margin:0;font-size:1.15rem;letter-spacing:-.02em}
+.lesson p{margin:0;color:var(--mute);max-width:60ch}
+.lesson code{display:block;padding:8px 10px;border-radius:10px;background:var(--bg);border:1px solid var(--line);font:.8rem/1.4 ui-monospace,Menlo,Consolas,monospace;word-break:break-all}
+.lesson .btn{margin-top:auto}
+@media (prefers-reduced-motion:no-preference){.stage{transition:background .2s}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">k<i>degrader</i></div>
+  <nav><a href="#curso">Curso</a></nav>
+</header>
+<main>
+  <section class="stage" id="stage" aria-label="Pré-visualização do degradê"><h1>seu degradê aqui</h1></section>
+  <section class="panel" aria-label="Controles">
+    <div>
+      <h2>Tipo</h2>
+      <div class="seg" id="types">
+        <button data-t="linear" aria-pressed="true">Linear</button>
+        <button data-t="radial" aria-pressed="false">Radial</button>
+        <button data-t="conic" aria-pressed="false">Cônico</button>
+      </div>
+    </div>
+    <div id="angleBox">
+      <h2>Ângulo</h2>
+      <div class="row"><input type="range" id="angle" min="0" max="360" value="135" aria-label="Ângulo"><output id="angleOut">135°</output></div>
+    </div>
+    <div>
+      <h2>Cores</h2>
+      <div class="bar" id="bar"></div>
+      <div id="stops"></div>
+      <div class="acts" style="margin-top:10px">
+        <button class="btn" id="add">Adicionar cor</button>
+        <button class="btn" id="rev">Inverter</button>
+        <button class="btn" id="rand">Aleatório</button>
+      </div>
+    </div>
+    <div>
+      <h2>Modelos</h2>
+      <div class="presets" id="presets"></div>
+    </div>
+    <div>
+      <h2>CSS</h2>
+      <pre id="code"></pre>
+      <div class="acts" style="margin-top:8px"><button class="btn primary" id="copy">Copiar CSS</button></div>
+      <div class="toast" id="toast" role="status"></div>
+    </div>
+  </section>
+</main>
+<section class="course" id="curso" aria-labelledby="ctitle">
+  <h2 class="big" id="ctitle">Curso: aprenda a criar degradês</h2>
+  <p>Seis aulas curtas, do básico ao avançado. Em cada uma, o botão carrega o exemplo no gerador para você mexer.</p>
+  <div class="lessons" id="lessons"></div>
+</section>
+<script>
+(function(){
+var S={type:"linear",angle:135,stops:[{c:"#ff5f6d",p:0},{c:"#7b5cff",p:55},{c:"#00d4ff",p:100}]};
+var PRESETS=[
+ ["#ff5f6d","#ffc371"],["#7b5cff","#00d4ff"],["#11998e","#38ef7d"],
+ ["#f953c6","#b91d73","#3a1c71"],["#fceabb","#f8b500","#e94057"],["#0f2027","#2c5364","#7ee8fa"]];
+var $=function(i){return document.getElementById(i)};
+function css(){
+  var st=S.stops.slice().sort(function(a,b){return a.p-b.p}).map(function(s){return s.c+" "+s.p+"%"}).join(", ");
+  if(S.type==="radial")return "radial-gradient(circle at center, "+st+")";
+  if(S.type==="conic")return "conic-gradient(from "+S.angle+"deg, "+st+")";
+  return "linear-gradient("+S.angle+"deg, "+st+")";
+}
+function bar(){
+  var st=S.stops.slice().sort(function(a,b){return a.p-b.p}).map(function(s){return s.c+" "+s.p+"%"}).join(", ");
+  return "linear-gradient(90deg, "+st+")";
+}
+function render(list){
+  var g=css();
+  document.documentElement.style.setProperty("--g",g);
+  $("bar").style.background=bar();
+  $("code").textContent="background: "+g+";";
+  $("angleBox").style.display=S.type==="radial"?"none":"";
+  $("angleOut").textContent=S.angle+"°";
+  if(list!==false)renderStops();
+}
+function renderStops(){
+  var box=$("stops");box.innerHTML="";
+  S.stops.forEach(function(s,i){
+    var r=document.createElement("div");r.className="stop";
+    var c=document.createElement("input");c.type="color";c.value=s.c;c.setAttribute("aria-label","Cor "+(i+1));
+    var p=document.createElement("input");p.type="range";p.min=0;p.max=100;p.value=s.p;p.setAttribute("aria-label","Posição da cor "+(i+1));
+    var o=document.createElement("output");o.textContent=s.p+"%";
+    var x=document.createElement("button");x.className="x";x.textContent="×";x.setAttribute("aria-label","Remover cor "+(i+1));
+    x.disabled=S.stops.length<=2;
+    c.oninput=function(){s.c=c.value;render(false)};
+    p.oninput=function(){s.p=+p.value;o.textContent=s.p+"%";render(false)};
+    x.onclick=function(){S.stops.splice(i,1);render()};
+    r.append(c,p,o,x);box.appendChild(r);
+  });
+}
+function setStops(cols){
+  S.stops=cols.map(function(c,i){return{c:c,p:Math.round(i*100/(cols.length-1))}});
+}
+function hsl(h,s,l){
+  s/=100;l/=100;var a=s*Math.min(l,1-l);
+  var f=function(n){var k=(n+h/30)%12,v=l-a*Math.max(-1,Math.min(k-3,9-k,1));return Math.round(255*v).toString(16).padStart(2,"0")};
+  return "#"+f(0)+f(8)+f(4);
+}
+$("types").onclick=function(e){
+  var b=e.target.closest("button");if(!b)return;
+  S.type=b.dataset.t;
+  [].forEach.call($("types").children,function(x){x.setAttribute("aria-pressed",x===b)});
+  render(false);
+};
+$("angle").oninput=function(){S.angle=+this.value;render(false)};
+$("add").onclick=function(){
+  if(S.stops.length>=8)return;
+  S.stops.push({c:hsl(Math.random()*360,80,60),p:50});render();
+};
+$("rev").onclick=function(){
+  S.stops.forEach(function(s){s.p=100-s.p});render();
+};
+$("rand").onclick=function(){
+  var h=Math.random()*360,n=2+Math.floor(Math.random()*3),d=40+Math.random()*80,cols=[];
+  for(var i=0;i<n;i++)cols.push(hsl((h+i*d)%360,70+Math.random()*25,50+Math.random()*15));
+  S.angle=Math.floor(Math.random()*360);$("angle").value=S.angle;
+  setStops(cols);render();
+};
+PRESETS.forEach(function(cols){
+  var b=document.createElement("button");
+  b.style.background="linear-gradient(135deg,"+cols.join(",")+")";
+  b.setAttribute("aria-label","Modelo com "+cols.length+" cores");
+  b.onclick=function(){setStops(cols);render()};
+  $("presets").appendChild(b);
+});
+function say(t){$("toast").textContent=t;setTimeout(function(){$("toast").textContent=""},2200)}
+$("copy").onclick=function(){
+  var t=$("code").textContent;
+  function fb(){
+    try{var a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();document.execCommand("copy");a.remove();say("CSS copiado.")}
+    catch(e){say("Não foi possível copiar. Selecione o texto e copie.")}
+  }
+  try{navigator.clipboard.writeText(t).then(function(){say("CSS copiado.")},fb)}catch(e){fb()}
+};
+var LESSONS=[
+ {t:"Aula 1 — O que é um degradê",d:"Um degradê é uma transição suave entre duas ou mais cores. No CSS ele é uma imagem gerada pelo navegador, então vai em background, não em background-color.",
+  s:{type:"linear",angle:90,stops:[{c:"#ff5f6d",p:0},{c:"#ffc371",p:100}]}},
+ {t:"Aula 2 — Direção e ângulo",d:"O ângulo define para onde o degradê aponta: 0° vai de baixo para cima, 90° da esquerda para a direita, 180° de cima para baixo. Teste valores diferentes.",
+  s:{type:"linear",angle:45,stops:[{c:"#7b5cff",p:0},{c:"#00d4ff",p:100}]}},
+ {t:"Aula 3 — Cores e posições",d:"Cada cor tem uma posição em %. Aproximar duas cores deixa a transição mais rápida; colocar duas cores na mesma posição cria um corte seco, sem mistura.",
+  s:{type:"linear",angle:90,stops:[{c:"#ff5f6d",p:0},{c:"#ff5f6d",p:50},{c:"#3a3fd8",p:50},{c:"#3a3fd8",p:100}]}},
+ {t:"Aula 4 — Degradê radial",d:"O radial começa em um ponto e se espalha em círculo. Serve para brilhos, luzes e fundos com foco no centro. Coloque a cor mais clara na posição 0%.",
+  s:{type:"radial",angle:0,stops:[{c:"#fff6a8",p:0},{c:"#ff9a3c",p:45},{c:"#8a1c7c",p:100}]}},
+ {t:"Aula 5 — Degradê cônico",d:"O cônico gira em volta do centro, como uma roda de cores ou um gráfico de pizza. Repita a primeira cor no fim para fechar o círculo sem emenda.",
+  s:{type:"conic",angle:0,stops:[{c:"#ff5f6d",p:0},{c:"#ffd23f",p:33},{c:"#00d4ff",p:66},{c:"#ff5f6d",p:100}]}},
+ {t:"Aula 6 — Evite o meio acinzentado",d:"Ao misturar cores opostas, o meio pode ficar sujo. Use uma cor intermediária vibrante entre elas. Em navegadores novos, também dá para escrever linear-gradient(in oklch, ...) para uma mistura mais viva.",
+  s:{type:"linear",angle:90,stops:[{c:"#2b6cff",p:0},{c:"#25e0a8",p:50},{c:"#ffd23f",p:100}]}}
+];
+function gcss(s){
+  var st=s.stops.map(function(x){return x.c+" "+x.p+"%"}).join(", ");
+  if(s.type==="radial")return "radial-gradient(circle at center, "+st+")";
+  if(s.type==="conic")return "conic-gradient(from "+s.angle+"deg, "+st+")";
+  return "linear-gradient("+s.angle+"deg, "+st+")";
+}
+LESSONS.forEach(function(l){
+  var el=document.createElement("article");el.className="lesson";
+  var pv=document.createElement("div");pv.className="pv";pv.style.background=gcss(l.s);
+  var b=document.createElement("div");b.className="body";
+  var h=document.createElement("h3");h.textContent=l.t;
+  var p=document.createElement("p");p.textContent=l.d;
+  var c=document.createElement("code");c.textContent=gcss(l.s);
+  var btn=document.createElement("button");btn.className="btn";btn.textContent="Testar no gerador";
+  btn.onclick=function(){
+    S.type=l.s.type;S.angle=l.s.angle;S.stops=l.s.stops.map(function(x){return{c:x.c,p:x.p}});
+    $("angle").value=S.angle;
+    [].forEach.call($("types").children,function(x){x.setAttribute("aria-pressed",x.dataset.t===S.type)});
+    render();$("stage").scrollIntoView({behavior:"smooth",block:"start"});
+  };
+  b.append(h,p,c,btn);el.append(pv,b);$("lessons").appendChild(el);
+});
+render();
+})();
+</script>
+</body>
+</html>
